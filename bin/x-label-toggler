@@ -6,25 +6,26 @@
 # $1 is the tag to be toggled (e.g. review, todo, waiting, urgent)
 # $2 is the filename provided by mutt
 
-COMMAND="$1"
-FNAME="$2"
-NFNAME="/tmp/x-label-toggler-`basename "$2"`.$$"
+label="$1"
+mbox="$2"
+X_LABEL="X-Label"
 
-OLDXLABEL=`formail -c -X X-Label < "$FNAME"`
+tmpfile=
+trap "rm -f $tmpfile 2>/dev/null" 1 2 3 15
+tmpfile=`mktemp 2>/dev/null || mktemp -t tmp`
 
-if [ "$OLDXLABEL" == "" ]; then
-  OLDXLABEL="X-Label: "
-fi
+ex_label=`formail -czx "$X_LABEL" < "$mbox"`
 
-if [[ $OLDXLABEL =~ $COMMAND ]]; then
-  NEWXLABEL=`echo $OLDXLABEL | sed "s/$COMMAND//"`
-  formail -I "$NEWXLABEL" < "$FNAME" > "$NFNAME"
-else
-  NEWXLABEL=$OLDXLABEL$COMMAND
-  formail -I "$NEWXLABEL" < "$FNAME" > "$NFNAME"
-fi
+new_label=`echo "$ex_label" | perl -snle '
+	next if m/\A\z/xms;
+	++$del && next if m/\A\Q$l\E\z/xms;
+	print $_;
+	END { print "$l\n" unless $del; }
+' -- -l="$label"`
 
-# if we created a new file, step over the old one
-if [ -f "$NFNAME" ]; then
-	mv "$NFNAME" "$FNAME"
-fi
+fm_arg=`echo "$new_label" \
+	| awk -v x_label="${X_LABEL}:" '{ print x_label, $0 }' \
+	| sed 's/[ \t]*$//'`
+
+formail -I "$fm_arg" < "$mbox" > "$tmpfile" || exit 1
+mv "$tmpfile" "$mbox" 2>/dev/null

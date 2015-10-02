@@ -32,7 +32,7 @@ macro index <esc>lw "<limit>~y waiting!~D<enter>" "Limit view to tag waiting"
 macro index <esc>lt "<limit>~y todo!~D<enter>" "Limit view to tag todo"
 macro index <esc>lu "<limit>~y urgent!~D<enter>" "Limit view to tag urgent"
 macro index <esc>lr "<limit>~y review!~D<enter>" "Limit view to tag review"
-macro index <esc>ld "<limit>!(~y review|~y urgent|~y waiting|~y todo|)!~D<enter>" "Limit view to all untagged messages"
+macro index <esc>ld "<limit>!(~y review|~y urgent|~y waiting|~y todo)!~D<enter>" "Limit view to all untagged messages"
 ```
 
 Enable coloring in mutt

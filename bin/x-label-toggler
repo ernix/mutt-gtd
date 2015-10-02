@@ -11,7 +11,7 @@ mbox="$2"
 X_LABEL="X-Label"
 
 tmpfile=
-trap "rm -f $tmpfile 2>/dev/null" 1 2 3 15
+trap 'rm -f "$tmpfile" 2>/dev/null' 1 2 3 15
 tmpfile=`mktemp 2>/dev/null || mktemp -t tmp`
 
 ex_label=`formail -czx "$X_LABEL" < "$mbox"`

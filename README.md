@@ -43,6 +43,10 @@ color index green default '~y waiting'
 color index yellow default '~y review'
 color index brightred default '~y todo'
 color index brightred default '~y urgent'
+color header default green '^X-Label: waiting'
+color header default yellow '^X-Label: review'
+color header default brightred '^X-Label: todo'
+color header default brightred '^X-Label: urgent'
 ```
 
 Enable display of X-Label

@@ -2,30 +2,30 @@
 
 #
 # https://github.com/stockc/mutt-gtd
+# https://github.com/ernix/mutt-gtd
 #
 # $1 is the tag to be toggled (e.g. review, todo, waiting, urgent)
 # $2 is the filename provided by mutt
 
-label="$1"
-mbox="$2"
-X_LABEL="X-Label"
+# DEPENDENCIES:
+#   - Email::MIME
 
-tmpfile=
-trap 'rm -f "$tmpfile" 2>/dev/null' 1 2 3 15
-tmpfile=`mktemp 2>/dev/null || mktemp -t tmp`
+LABEL="$1" perl -i -MEmail::MIME -0777 -pe '
+	BEGIN {
+		our $X_LABEL = "X-Label";
+		our $L = defined $ENV{LABEL} ? $ENV{LABEL} : q{};
+	}
+	my $mime = Email::MIME->new($_);
+	my @ex_label = $mime->header_str($X_LABEL);
 
-ex_label=`formail -czx "$X_LABEL" < "$mbox"`
+	my @new_label;
+	if (grep { $_ eq $L } @ex_label) {
+		@new_label = grep { $_ ne $L } @ex_label;
+	}
+	else {
+		@new_label = (@ex_label, $L);
+	}
 
-new_label=`echo "$ex_label" | perl -snle '
-	next if m/\A\z/xms;
-	++$del && next if m/\A\Q$l\E\z/xms;
-	print $_;
-	END { print "$l\n" unless $del; }
-' -- -l="$label"`
-
-fm_arg=`echo "$new_label" \
-	| awk -v x_label="${X_LABEL}:" '{ print x_label, $0 }' \
-	| sed 's/[ \t]*$//'`
-
-formail -I "$fm_arg" < "$mbox" > "$tmpfile" || exit 1
-mv "$tmpfile" "$mbox" 2>/dev/null
+	$mime->header_str_set($X_LABEL => @new_label);
+	$_ = $mime->as_string;
+' "$2"
